@@ -27,7 +27,7 @@
 
 #define JOINT_CMD_TOPIC "allegroHand_1/joint_cmd"  //"/allegro/joint_cmd"        // define the name of the topic to communicate with the allegro node
 
-#define Surface_Topic "surface_topic"
+#define Surface_Topic "bhand_ja"
 
 #define FTips_Topic "ftips_topic"
 
@@ -328,9 +328,15 @@ int main(int argc, char** argv){
 
     joint_state_pub = n.advertise<sensor_msgs::JointState>(JOINT_CMD_TOPIC, 10);
 
+    ros::Publisher bhand_pub=n.advertise<sensor_msgs::JointState>(Surface_Topic, 10);
+
+
     // define vectors for storing velocity and positions data
     std::vector<double> joint_velocity(16,0);
     //MathLib::Vector joint_velocity(16,0);
+
+
+
 
     std::vector<std::vector<double> > positions(6,std::vector<double>(16));
 
@@ -399,6 +405,36 @@ int main(int argc, char** argv){
 
 
 
+    std::vector<std::vector<double> > bhand_joinAngles(6,std::vector<double>(4));
+
+    double bja0[]={0.0,0.0,0.0,0.0};
+    bhand_joinAngles[0].assign(bja0,bja0+4);
+
+    double bja1[]={3.9119,1.5874,2.9227,-0.4453};
+    bhand_joinAngles[1].assign(bja1,bja1+4);
+
+    double bja2[]={3.2216,1.2050,2.8998,-0.0715};
+    bhand_joinAngles[2].assign(bja2,bja2+4);
+
+    double bja3[]={1.7821,1.0097,1.4966,-0.0364};
+    bhand_joinAngles[3].assign(bja3,bja3+4);
+
+    double bja4[]={1.6408,1.0488,1.6260,0.1500};
+    bhand_joinAngles[4].assign(bja4,bja4+4);
+
+    double bja5[]={0.0,0.0,0.0,0.0};
+    bhand_joinAngles[5].assign(bja5,bja5+4);
+
+    std::vector<double> bhand_joint_velocity(4,0);
+
+
+    sensor_msgs::JointState bhand_msgs;
+
+    bhand_msgs.velocity.resize(4);
+    bhand_msgs.position.resize(4);
+
+    bhand_msgs.velocity=bhand_joint_velocity;
+
 
     // resize the vectors of position and velocity according to the numbers of DOF of the allegro hand
     allegro_msgs.velocity.resize(16);
@@ -406,9 +442,12 @@ int main(int argc, char** argv){
     allegro_msgs.position.resize(16);
 
 
+
+
     // setting the velocity of the joint to maximum
     allegro_msgs.velocity=joint_velocity;
 
+    std::cout<<"ok\n";
 
 
     ros::Rate loop_rate(1);                                                // setting the sleeing time to 10 msec
@@ -418,7 +457,13 @@ int main(int argc, char** argv){
         //std::cout<<"majority class: "<<class_r<<"\n";
         allegro_msgs.position=positions[class_r];                           // setting the joint position of the allegro hand
 
+        bhand_msgs.position=bhand_joinAngles[class_r];
+
         joint_state_pub.publish(allegro_msgs);                              // publish the message
+
+        bhand_pub.publish(bhand_msgs);
+
+
 
         // checking if any key is hitten for resetting the prosedure
         if(kbhit()){
